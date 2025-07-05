@@ -24,3 +24,15 @@ tomar :: Int -> [a] -> [a]
 tomar 0 _ = []
 tomar _ [] = []
 tomar n (x:xs) = x : tomar (n-1) xs
+
+tomarMientras :: (a -> Bool) -> [a] -> [a]
+tomarMientras _ [] = []
+tomarMientras p (x:xs)
+  | p x       = x : tomarMientras p xs
+  | otherwise = []
+
+
+nIndex :: [a] -> Int -> Maybe a
+nIndex [] _ = Nothing
+nIndex (x:_) 0 = Just x
+nIndex (_:xs) n = nIndex xs (n-1)
