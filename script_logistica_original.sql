@@ -1,7 +1,7 @@
-CREATE EXTENSION postgis;
+-- Habilitar PostGIS (si está instalado)
+CREATE EXTENSION IF NOT EXISTS postgis;
 
-
-
+-- Personas y Usuarios
 CREATE TABLE Person (
     id SERIAL PRIMARY KEY,
     first_name TEXT,
@@ -9,18 +9,18 @@ CREATE TABLE Person (
     email TEXT
 );
 
-CREATE TABLE User (
+CREATE TABLE Users (
     person_id INT PRIMARY KEY REFERENCES Person(id),
     password_hash TEXT
 );
 
 CREATE TABLE Admin_ (
-    person_id INT PRIMARY KEY REFERENCES User(person_id),
+    person_id INT PRIMARY KEY REFERENCES Users(person_id),
     role TEXT
 );
 
 CREATE TABLE Driver (
-    person_id INT PRIMARY KEY REFERENCES User(person_id),
+    person_id INT PRIMARY KEY REFERENCES Users(person_id),
     available BOOLEAN,
     working_hours TEXT
 );
@@ -29,6 +29,7 @@ CREATE TABLE Client (
     person_id INT PRIMARY KEY REFERENCES Person(id)
 );
 
+-- Puntos geográficos
 CREATE TABLE Point_ (
     id SERIAL PRIMARY KEY,
     numeracion VARCHAR(10),
@@ -38,6 +39,7 @@ CREATE TABLE Point_ (
     owner_id INT REFERENCES Client(person_id)
 );
 
+-- Calles entre puntos
 CREATE TABLE Street (
     id SERIAL PRIMARY KEY,
     from_point_id INT REFERENCES Point_(id),
@@ -49,13 +51,16 @@ CREATE TABLE Street (
     street_weight FLOAT
 );
 
+-- Gestión de puntos (clave compuesta)
 CREATE TABLE Point_Management (
-    admin_id INT PRIMARY KEY REFERENCES Admin_(id),
-    point_id INT PRIMARY KEY REFERENCES Point_(id),
+    admin_id INT REFERENCES Admin_(person_id),
+    point_id INT REFERENCES Point_(id),
     change_date TIMESTAMPTZ,
-    change_type TEXT
+    change_type TEXT,
+    PRIMARY KEY (admin_id, point_id)
 );
 
+-- Vehículos
 CREATE TABLE Vehicle (
     id SERIAL PRIMARY KEY,
     capacity_kg FLOAT,
@@ -64,6 +69,7 @@ CREATE TABLE Vehicle (
     available BOOLEAN
 );
 
+-- Viajes
 CREATE TABLE Trip (
     id SERIAL PRIMARY KEY,
     trip_date DATE,
@@ -74,11 +80,14 @@ CREATE TABLE Trip (
     vehicle_id INT REFERENCES Vehicle(id)
 );
 
+-- Relación entre conductores y viajes (clave compuesta)
 CREATE TABLE Driver_Trip (
-    driver_id INT PRIMARY KEY REFERENCES Driver(id),
-    trip_id INT PRIMARY KEY REFERENCES Trip(id)
+    driver_id INT REFERENCES Driver(person_id),
+    trip_id INT REFERENCES Trip(id),
+    PRIMARY KEY (driver_id, trip_id)
 );
 
+-- Envíos
 CREATE TABLE Shipment (
     id SERIAL PRIMARY KEY,
     ship_date DATE,
@@ -88,9 +97,10 @@ CREATE TABLE Shipment (
     trip_id INT REFERENCES Trip(id)
 );
 
+-- Puntos de entrega de cada envío (clave compuesta)
 CREATE TABLE Ships (
-    shipment_id INT PRIMARY KEY REFERENCES Shipment(id),
-    point_id INT PRIMARY KEY REFERENCES Point_(id),
-    distance FLOAT
+    shipment_id INT REFERENCES Shipment(id),
+    point_id INT REFERENCES Point_(id),
+    distance FLOAT,
+    PRIMARY KEY (shipment_id, point_id)
 );
-
